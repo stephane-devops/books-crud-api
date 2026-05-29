@@ -52,12 +52,15 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
 
     const cdktfWave = pipeline.addWave('ApplicationResources', {
       post: [
-        new ShellStep('CdktfDeploy', {
+        new CodeBuildStep('CdktfDeploy', {
           commands: [
             'cd books-crud-api-application-cloud-resources',
             'npm ci',
             'npx cdktf deploy --auto-approve'
           ],
+          buildEnvironment: {
+            buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+          },
         }),
       ],
     });

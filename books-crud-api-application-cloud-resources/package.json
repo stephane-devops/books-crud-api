@@ -14,6 +14,7 @@
     "@aws-sdk/client-cloudformation": "^3.1045.0",
     "@cdktf/provider-aws": "^19.0.0",
     "cdktf": "^0.21.0",
+    "cdktf-cli": "^0.21.0",
     "constructs": "^10.0.0"
   },
   "engines": {
