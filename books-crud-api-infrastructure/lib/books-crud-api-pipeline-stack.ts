@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { CodePipeline, CodePipelineSource, ShellStep, CodeBuildStep } from 'aws-cdk-lib/pipelines';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as assert from "node:assert";
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import { BooksCrudApiInfrastructureStack } from './books-crud-api-infrastructure-stack';
@@ -24,6 +25,11 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
 
     const pipeline = new CodePipeline(this, 'Pipeline', {
       pipelineName: 'books-crud-api-pipeline',
+      codeBuildDefaults: {
+        buildEnvironment: {
+          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+        },
+      },
       synth: new ShellStep('Synth', {
         input: CodePipelineSource.gitHub(githubRepo, 'main'),
         commands: [
