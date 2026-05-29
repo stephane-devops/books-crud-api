@@ -1,0 +1,29 @@
+{
+  "name": "books-crud-api-application-cloud-resources",
+  "version": "1.0.0",
+  "main": "main.js",
+  "types": "main.ts",
+  "scripts": {
+    "get": "cdktf get",
+    "build": "tsc",
+    "synth": "cdktf synth",
+    "deploy": "cdktf deploy",
+    "destroy": "cdktf destroy"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudformation": "^3.1045.0",
+    "@cdktf/provider-aws": "^19.0.0",
+    "cdktf": "^0.21.0",
+    "constructs": "^10.0.0"
+  },
+  "overrides": {
+    "@cdktf/provider-aws": {
+      "cdktf": "^0.21.0"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.0.0"
+  }
+}

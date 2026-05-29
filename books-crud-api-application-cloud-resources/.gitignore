@@ -1,0 +1,21 @@
+# CDKTF
+.gen
+cdktf.out
+terraform.tfstate*
+.terraform
+.terraform.lock.hcl
+
+# Node.js
+node_modules
+dist
+lib
+*.js
+!main.ts
+!jest.config.js
+*.d.ts
+
+# Misc
+.DS_Store
+*.log
+cdktf.out
+

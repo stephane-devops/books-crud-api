@@ -1,0 +1,12 @@
+{
+  "language": "typescript",
+  "app": "npx ts-node main.ts",
+  "terraformProviders": [
+    "aws@~> 5.0"
+  ],
+  "terraformModules": [],
+  "context": {
+    "domainName": "clouddevops.ca"
+  },
+  "projectId": "c01dd337-d6a5-49cd-a182-cf0d725b38f7"
+}
