@@ -1,19 +1,20 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as route53 from 'aws-cdk-lib/aws-route53';
+import { AppImagePreparer } from './app-image-preparer';
 
 export class BooksCrudApiInfrastructureStack extends cdk.Stack {
+  public readonly ecrRepositoryUriOutput: cdk.CfnOutput;
+  public readonly appImagePreparer: AppImagePreparer;
+
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // ECR Repository for PHP application image
-    const repository = new ecr.Repository(this, 'BooksCrudApiRepository', {
+    // ECR Repository and init resources via AppImagePreparer
+    this.appImagePreparer = new AppImagePreparer(this, 'AppImagePreparer', {
       repositoryName: 'books-crud-api',
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      emptyOnDelete: true,
     });
 
     // Terraform Backend: S3 Bucket
@@ -53,8 +54,8 @@ export class BooksCrudApiInfrastructureStack extends cdk.Stack {
       exportName: 'books-crud-api-terraform-lock-table',
     });
 
-    new cdk.CfnOutput(this, 'EcrRepositoryUri', {
-      value: repository.repositoryUri,
+    this.ecrRepositoryUriOutput = new cdk.CfnOutput(this, 'EcrRepositoryUri', {
+      value: this.appImagePreparer.asset.imageUri,
       exportName: 'books-crud-api-ecr-repository-uri',
     });
 

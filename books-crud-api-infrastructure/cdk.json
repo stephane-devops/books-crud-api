@@ -96,6 +96,7 @@
     "@aws-cdk/aws-s3:publicAccessBlockedByDefault": true,
     "@aws-cdk/aws-lambda:useCdkManagedLogGroup": true,
     "domainName": "clouddevops.ca",
+    "github_repo": "stephane-devops/books-crud-api",
     "certificateArn": "arn:aws:acm:us-east-1:748005667575:certificate/3ec2d170-1f2c-4eda-8fde-700395fe6432"
   }
 }
