@@ -1,0 +1,19 @@
+- dosser "books-crud-api-infrastucture"
+    - aws cdk
+        - ECR repository
+        - Terraform backend
+            - s3 bucket
+            - dynamodb table
+        - SSL certificate
+
+- dosser "books-crud-api-application-cloud-resources"
+    - CDKTF
+        - Api Gateway
+        - Lambda function
+            - PHP crud application model Book, from ECR repository
+        - DynamoDB table
+
+- dession "books-crud-api-application-php"
+    - Lavarel
+    - Dockerfile
+    - bootstrap first push to ECR repository
