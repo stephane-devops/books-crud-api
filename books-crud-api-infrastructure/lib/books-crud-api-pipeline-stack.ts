@@ -27,7 +27,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
       pipelineName: 'books-crud-api-pipeline',
       codeBuildDefaults: {
         buildEnvironment: {
-          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         },
       },
       synth: new ShellStep('Synth', {
