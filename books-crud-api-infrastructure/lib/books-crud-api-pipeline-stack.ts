@@ -84,6 +84,39 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
       post: [cdktfDeployStep],
     });
 
+    const frontendDeployStep = new CodeBuildStep('FrontendDeploy', {
+      input: pipeline.synth.primaryOutput.sourceArtifact,
+      installCommands: [
+        'n 22'
+      ],
+      commands: [
+        'cd books-crud-api-application-frontend',
+        'npm i',
+        'npm run build',
+        'cd ../books-crud-api-application-cloud-resources',
+        'npm i',
+        'npx cdktf output --json > outputs.json',
+        'FRONTEND_BUCKET=$(cat outputs.json | jq -r \'.["books-crud-api-application-cloud-resources"].frontend_bucket_name\')',
+        'cd ../books-crud-api-application-frontend',
+        'aws s3 sync build/ s3://$FRONTEND_BUCKET --delete'
+      ],
+      buildEnvironment: {
+        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+      },
+      rolePolicyStatements: [
+        new iam.PolicyStatement({
+          actions: ['s3:PutObject', 's3:ListBucket', 's3:DeleteObject', 's3:GetObject'],
+          resources: ['*'],
+        }),
+        new iam.PolicyStatement({
+          actions: ['cloudformation:DescribeStacks'],
+          resources: ['*'],
+        })
+      ],
+    });
+
+    cdktfWave.addPost(frontendDeployStep);
+
     pipeline.buildPipeline();
   }
 }

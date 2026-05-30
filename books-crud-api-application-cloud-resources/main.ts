@@ -64,11 +64,15 @@ class BookCrudApi extends TerraformStack {
       region: config.region,
     });
 
-    new FrontendResources(this, "FrontendResources", {
+    const frontend = new FrontendResources(this, "FrontendResources", {
       HostedZoneIdImport,
       certificateArnImport,
       domainNameImport,
       region: config.region,
+    });
+
+    new TerraformOutput(this, "frontend_bucket_name", {
+      value: frontend.bucketName,
     });
 
     new TerraformOutput(this, "api_url", {

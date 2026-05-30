@@ -133,5 +133,9 @@ export class FrontendResources extends Construct {
         evaluateTargetHealth: false,
       },
     });
+
+    this.bucketName = bucket.bucket;
   }
+
+  public readonly bucketName: string;
 }
