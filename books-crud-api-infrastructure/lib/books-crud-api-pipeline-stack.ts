@@ -56,7 +56,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
           commands: [
             'cd books-crud-api-application-cloud-resources',
             'node -v',
-            'npm ci',
+            'npm i',
             'npx cdktf deploy --auto-approve'
           ],
           buildEnvironment: {
