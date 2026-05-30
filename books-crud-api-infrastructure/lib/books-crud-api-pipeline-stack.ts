@@ -24,6 +24,8 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
 
     const githubRepo = this.node.tryGetContext('github_repo') || assert.fail('github_repo context must be provided');
 
+    const source = CodePipelineSource.gitHub(githubRepo, 'main');
+
     const pipeline = new CodePipeline(this, 'Pipeline', {
       pipelineName: 'books-crud-api-pipeline',
       codeBuildDefaults: {
@@ -32,7 +34,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
         },
       },
       synth: new ShellStep('Synth', {
-        input: CodePipelineSource.gitHub(githubRepo, 'main'),
+        input: source,
         installCommands: [
           'n 22'
         ],
@@ -56,6 +58,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
     pipeline.addStage(deployStage);
 
     const cdktfDeployStep = new CodeBuildStep('CdktfDeploy', {
+      input: source,
       installCommands: [
         'sudo yum install -y yum-utils',
         'sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo',
@@ -85,7 +88,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
     });
 
     const frontendDeployStep = new CodeBuildStep('FrontendDeploy', {
-      input: pipeline.synth,
+      input: source,
       installCommands: [
         'n 22'
       ],
