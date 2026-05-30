@@ -56,10 +56,16 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
     pipeline.addStage(deployStage);
 
     const cdktfDeployStep = new CodeBuildStep('CdktfDeploy', {
+      installCommands: [
+        'sudo yum install -y yum-utils',
+        'sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo',
+        'sudo yum -y install terraform'
+      ],
       commands: [
         'n 22',
         'cd books-crud-api-application-cloud-resources',
         'node -v',
+        'terraform -version',
         'npm i',
         'npx cdktf deploy --auto-approve'
       ],
