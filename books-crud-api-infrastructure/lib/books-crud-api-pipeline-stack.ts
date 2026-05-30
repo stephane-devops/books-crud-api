@@ -4,6 +4,7 @@ import { CodePipeline, CodePipelineSource, ShellStep, CodeBuildStep } from 'aws-
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as assert from "node:assert";
 import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { BooksCrudApiInfrastructureStack } from './books-crud-api-infrastructure-stack';
 
 class AppStage extends cdk.Stage {
@@ -27,7 +28,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
       pipelineName: 'books-crud-api-pipeline',
       codeBuildDefaults: {
         buildEnvironment: {
-          buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
+          buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
         },
       },
       synth: new ShellStep('Synth', {
@@ -51,20 +52,26 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
     });
     pipeline.addStage(deployStage);
 
-    const cdktfWave = pipeline.addWave('ApplicationResources', {
-      post: [
-        new CodeBuildStep('CdktfDeploy', {
-          commands: [
-            'cd books-crud-api-application-cloud-resources',
-            'node -v',
-            'npm i',
-            'npx cdktf deploy --auto-approve'
-          ],
-          buildEnvironment: {
-            buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
-          },
+    const cdktfDeployStep = new CodeBuildStep('CdktfDeploy', {
+      commands: [
+        'cd books-crud-api-application-cloud-resources',
+        'node -v',
+        'npm i',
+        'npx cdktf deploy --auto-approve'
+      ],
+      buildEnvironment: {
+        buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+      },
+      rolePolicyStatements: [
+        new iam.PolicyStatement({
+          actions: ['cloudformation:ListExports'],
+          resources: ['*'],
         }),
       ],
+    });
+
+    const cdktfWave = pipeline.addWave('ApplicationResources', {
+      post: [cdktfDeployStep],
     });
 
     pipeline.buildPipeline();
