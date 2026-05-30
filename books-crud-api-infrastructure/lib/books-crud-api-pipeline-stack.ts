@@ -85,7 +85,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
     });
 
     const frontendDeployStep = new CodeBuildStep('FrontendDeploy', {
-      input: pipeline.synth.primaryOutput.sourceArtifact,
+      input: pipeline.synth.primaryOutput!,
       installCommands: [
         'n 22'
       ],
