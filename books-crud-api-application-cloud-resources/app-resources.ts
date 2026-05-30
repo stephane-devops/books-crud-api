@@ -54,7 +54,7 @@ export class AppResources extends Construct {
     const lambda = new LambdaFunction(this, "BooksApiLambda", {
       functionName: "books-crud-api",
       packageType: "Image",
-      imageUri: `${config.ecrUriImport.value}:latest`,
+      imageUri: config.ecrUriImport.value,
       role: iam.lambdaRole.arn,
       timeout: 30,
       memorySize: 512,
