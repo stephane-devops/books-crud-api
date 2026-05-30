@@ -33,6 +33,9 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
       },
       synth: new ShellStep('Synth', {
         input: CodePipelineSource.gitHub(githubRepo, 'main'),
+        installCommands: [
+          'n 22'
+        ],
         commands: [
           'cd books-crud-api-infrastructure',
           'node -v',
@@ -54,6 +57,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
 
     const cdktfDeployStep = new CodeBuildStep('CdktfDeploy', {
       commands: [
+        'n 22',
         'cd books-crud-api-application-cloud-resources',
         'node -v',
         'npm i',
