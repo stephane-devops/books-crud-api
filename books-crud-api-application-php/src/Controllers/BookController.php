@@ -55,7 +55,7 @@ class BookController
         $id = $args['id'];
         $data = json_decode($request->getBody()->getContents(), true);
 
-        $book = $this->bookService->updateBook($id, $data);
+        $book = $this->bookService->updateBook($id, $data ?: []);
 
         if (!$book) {
             $response->getBody()->write(json_encode(['message' => 'Book not found']));
