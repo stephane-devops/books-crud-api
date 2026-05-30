@@ -34,11 +34,12 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
         input: CodePipelineSource.gitHub(githubRepo, 'main'),
         commands: [
           'cd books-crud-api-infrastructure',
+          'node -v',
           'npm i',
           'npm run build',
           'npx cdk synth',
           'cd ../books-crud-api-application-cloud-resources',
-          'npm ci',
+          'npm i',
           'npm run build'
         ],
         primaryOutputDirectory: 'books-crud-api-infrastructure/cdk.out'
