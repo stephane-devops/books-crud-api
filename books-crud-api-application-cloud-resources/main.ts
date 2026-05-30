@@ -3,6 +3,7 @@ import {App, TerraformStack, TerraformOutput, S3Backend} from "cdktf";
 import { AwsProvider } from "@cdktf/provider-aws/lib/provider";
 import { AppBackend } from "./backend";
 import { AppResources } from "./app-resources";
+import { FrontendResources } from "./frontend-resources";
 import {DataAwsCloudformationExport} from "@cdktf/provider-aws/lib/data-aws-cloudformation-export";
 import { CloudFormationExportService } from "./cloudformation-export.service";
 
@@ -60,6 +61,13 @@ class BookCrudApi extends TerraformStack {
       certificateArnImport,
       domainNameImport,
       ecrUriImport,
+      region: config.region,
+    });
+
+    new FrontendResources(this, "FrontendResources", {
+      HostedZoneIdImport,
+      certificateArnImport,
+      domainNameImport,
       region: config.region,
     });
 
