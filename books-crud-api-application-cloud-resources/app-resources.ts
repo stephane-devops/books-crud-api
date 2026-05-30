@@ -70,6 +70,11 @@ export class AppResources extends Construct {
     this.api = new Apigatewayv2Api(this, "BooksApiGateway", {
       name: "Books API",
       protocolType: "HTTP",
+      corsConfiguration: {
+        allowHeaders: ["*"],
+        allowMethods: ["*"],
+        allowOrigins: ["*"],
+      },
     });
 
     const integration = new Apigatewayv2Integration(this, "LambdaIntegration", {
