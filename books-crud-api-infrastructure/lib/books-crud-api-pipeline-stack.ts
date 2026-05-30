@@ -74,7 +74,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
       },
       rolePolicyStatements: [
         new iam.PolicyStatement({
-          actions: ['cloudformation:ListExports'],
+          actions: ['*'],
           resources: ['*'],
         }),
       ],
