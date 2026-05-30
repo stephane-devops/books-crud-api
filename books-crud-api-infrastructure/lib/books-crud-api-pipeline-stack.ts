@@ -59,7 +59,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
             'npx cdktf deploy --auto-approve'
           ],
           buildEnvironment: {
-            buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
+            buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
           },
         }),
       ],
