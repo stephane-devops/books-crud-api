@@ -13,7 +13,7 @@
             - PHP crud application model Book, from ECR repository
         - DynamoDB table
 
-- dession "books-crud-api-application-php"
+- dossion "books-crud-api-application-php"
     - Lavarel
     - Dockerfile
     - bootstrap first push to ECR repository
