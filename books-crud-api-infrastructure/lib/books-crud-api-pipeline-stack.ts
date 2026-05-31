@@ -112,7 +112,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
           resources: ['*'],
         }),
         new iam.PolicyStatement({
-          actions: ['cloudformation:DescribeStacks'],
+          actions: ['cloudformation:DescribeStacks', 'cloudformation:ListExports'],
           resources: ['*'],
         })
       ],
