@@ -3,7 +3,6 @@ import { Construct } from 'constructs';
 import { CodePipeline, CodePipelineSource, ShellStep, CodeBuildStep } from 'aws-cdk-lib/pipelines';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as assert from "node:assert";
-import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { BooksCrudApiInfrastructureStack } from './books-crud-api-infrastructure-stack';
 
@@ -70,8 +69,9 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
         'node -v',
         'terraform -version',
         'npm i',
-        'npx cdktf deploy --auto-approve'
+        'npx cdktf deploy --auto-approve --outputs-file outputs.json'
       ],
+      primaryOutputDirectory: 'books-crud-api-application-cloud-resources',
       buildEnvironment: {
         buildImage: codebuild.LinuxBuildImage.AMAZON_LINUX_2_5,
       },
@@ -89,6 +89,9 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
 
     const frontendDeployStep = new CodeBuildStep('FrontendDeploy', {
       input: source,
+      additionalInputs: {
+        'cdktf-outputs': cdktfDeployStep.primaryOutput!,
+      },
       installCommands: [
         'n 22'
       ],
@@ -96,10 +99,7 @@ export class BooksCrudApiPipelineStack extends cdk.Stack {
         'cd books-crud-api-application-frontend',
         'npm i',
         'npm run build',
-        'cd ../books-crud-api-application-cloud-resources',
-        'npm i',
-        'npx cdktf output --json > outputs.json',
-        'FRONTEND_BUCKET=$(cat outputs.json | jq -r \'.["books-crud-api-application-cloud-resources"].frontend_bucket_name\')',
+        'FRONTEND_BUCKET=$(cat ../cdktf-outputs/outputs.json | jq -r \'.["books-crud-api-application-cloud-resources"].frontend_bucket_name\')',
         'cd ../books-crud-api-application-frontend',
         'aws s3 sync build/ s3://$FRONTEND_BUCKET --delete'
       ],
