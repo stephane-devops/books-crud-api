@@ -1,0 +1,91 @@
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import { AppImagePreparer } from './app-image-preparer';
+
+export class BooksCrudApiInfrastructureStack extends cdk.Stack {
+  public readonly ecrRepositoryUriOutput: cdk.CfnOutput;
+  public readonly appImagePreparer: AppImagePreparer;
+
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // ECR Repository and init resources via AppImagePreparer
+    this.appImagePreparer = new AppImagePreparer(this, 'AppImagePreparer', {
+      repositoryName: 'books-crud-api',
+    });
+
+    // Terraform Backend: S3 Bucket
+    const bucket = new s3.Bucket(this, 'TerraformStateBucket', {
+      bucketName: `books-crud-api-terraform-state-${this.account}`,
+      versioned: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      autoDeleteObjects: true,
+    });
+
+    // Terraform Backend: DynamoDB Table for Locking
+    const table = new dynamodb.Table(this, 'TerraformStateLockTable', {
+      tableName: 'books-crud-api-terraform-lock',
+      partitionKey: { name: 'LockID', type: dynamodb.AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+    });
+    
+    // Get domain names from context
+    const domainName = this.node.tryGetContext('domainName');
+    const backendSubdomain = this.node.tryGetContext('backendsubdomain');
+    const frontendSubdomain = this.node.tryGetContext('frontendsubdomain');
+    
+    // Look up Hosted Zone ID from domain name
+    const hostedZone = route53.HostedZone.fromLookup(this, 'HostedZone', {
+      domainName: domainName,
+    });
+
+
+    // Exports for CDKTF
+    new cdk.CfnOutput(this, 'TerraformStateBucketName', {
+      value: bucket.bucketName,
+      exportName: 'books-crud-api-terraform-state-bucket',
+    });
+
+    new cdk.CfnOutput(this, 'TerraformStateLockTableName', {
+      value: table.tableName,
+      exportName: 'books-crud-api-terraform-lock-table',
+    });
+
+    this.ecrRepositoryUriOutput = new cdk.CfnOutput(this, 'EcrRepositoryUri', {
+      value: this.appImagePreparer.asset.imageUri,
+      exportName: 'books-crud-api-ecr-repository-uri',
+    });
+
+    const certificateArn = this.node.tryGetContext('certificateArn')?.replace('{ACCOUNTID}', this.account);
+
+    new cdk.CfnOutput(this, 'CertificateArn', {
+      value: certificateArn,
+      exportName: 'api-certificate-arn',
+    });
+
+    new cdk.CfnOutput(this, 'DomainName', {
+      value: domainName,
+      exportName: 'api-domain-name',
+    });
+
+    new cdk.CfnOutput(this, 'BackendSubdomain', {
+      value: backendSubdomain,
+      exportName: 'api-backend-subdomain',
+    });
+
+    new cdk.CfnOutput(this, 'FrontendSubdomain', {
+      value: frontendSubdomain,
+      exportName: 'api-frontend-subdomain',
+    });
+
+    new cdk.CfnOutput(this, 'HostedZoneId', {
+      value: hostedZone.hostedZoneId,
+      exportName: 'api-hosted-zone-id',
+    });
+  }
+}

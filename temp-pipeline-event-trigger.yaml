@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation temporaire : EventBridge qui ecoute la pipeline et applique le script post_books.sh via CodeBuild'
+
+Parameters:
+  PipelineName:
+    Type: String
+    Default: 'books-crud-api-pipeline'
+    Description: 'Le nom de la pipeline CodePipeline a ecouter'
+
+Resources:
+  # Role pour CodeBuild
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodeBuildLogsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+
+  # Projet CodeBuild pour executer le script
+  PostBooksCodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${AWS::StackName}-PostBooks'
+      Description: 'Execute le script post_books.sh apres la reussite de la pipeline'
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            build:
+              commands:
+                - echo "Creation du script post_books.sh..."
+                - |
+                  cat << 'EOF' > post_books.sh
+                  #!/bin/bash
+                  API_URL="https://api.clouddevops.ca/books"
+                  BOOKS=(
+                      '{"title": "Bonheur d'\''occasion", "author": "Gabrielle Roy", "year": 1945}'
+                      '{"title": "Kamouraska", "author": "Anne Hébert", "year": 1970}'
+                      '{"title": "Maria Chapdelaine", "author": "Louis Hémon", "year": 1913}'
+                      '{"title": "Le Matou", "author": "Yves Beauchemin", "year": 1981}'
+                      '{"title": "L'\''Avalée des avalés", "author": "Réjean Ducharme", "year": 1966}'
+                      '{"title": "Les Belles-Sœurs", "author": "Michel Tremblay", "year": 1968}'
+                      '{"title": "Comment faire l'\''amour avec un Nègre sans se fatiguer", "author": "Dany Laferrière", "year": 1985}'
+                      '{"title": "Poésies complètes", "author": "Émile Nelligan", "year": 1904}'
+                      '{"title": "Agaguk", "author": "Yves Thériault", "year": 1958}'
+                      '{"title": "Un dimanche à Kyoto", "author": "Gilles Vigneault", "year": 1959}'
+                  )
+                  echo "Posting 10 diversified Quebec books to $API_URL..."
+                  for BOOK in "${BOOKS[@]}"; do
+                      echo "Posting: $BOOK"
+                      curl -X POST "$API_URL" \
+                           -H "Content-Type: application/json" \
+                           -d "$BOOK"
+                      echo -e "\n-----------------------------------"
+                  done
+                  echo "Done!"
+                  EOF
+                - chmod +x post_books.sh
+                - ./post_books.sh
+
+  # Role pour EventBridge afin de demarrer CodeBuild
+  EventBridgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: EventBridgeStartCodeBuild
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codebuild:StartBuild
+                Resource: !GetAtt PostBooksCodeBuildProject.Arn
+
+  # Regle EventBridge
+  PipelineSuccessRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: !Sub 'Declenche CodeBuild quand la pipeline ${PipelineName} reussit'
+      EventPattern:
+        source:
+          - aws.codepipeline
+        detail-type:
+          - CodePipeline Pipeline Execution State Change
+        detail:
+          pipeline:
+            - !Ref PipelineName
+          state:
+            - SUCCEEDED
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt PostBooksCodeBuildProject.Arn
+          Id: PostBooksTarget
+          RoleArn: !GetAtt EventBridgeRole.Arn
+
+Outputs:
+  CodeBuildProjectName:
+    Description: 'Nom du projet CodeBuild'
+    Value: !Ref PostBooksCodeBuildProject
+  EventRuleName:
+    Description: 'Nom de la regle EventBridge'
+    Value: !Ref PipelineSuccessRule
